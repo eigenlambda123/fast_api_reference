@@ -72,3 +72,33 @@ async def get_github_user(username: str = Query(..., min_length=1)):
         "bio": data.get("bio"),
         "profile_url": data.get("html_url")
     }
+
+
+
+
+API_URL = "https://api.agify.io" # Base URL for the Agify API
+
+
+@app.get("/predict-age")
+async def get_prediction(name: str) -> dict:
+    """Fetch age prediction for a given name using the Agify API."""
+
+    params = {"name": name} # Query parameters for the API request
+
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client: # Using AsyncClient for asynchronous requests with a timeout
+
+            response = await client.get(API_URL, params=params) # Make an asynchronous GET request to the Agify API
+            print(f"Status Code: {response.status_code}") # Print the status code for debugging
+            response.raise_for_status()  # Raise an error for non-200 responses
+            data = response.json() # Parse the JSON response
+            return data # Return the parsed data
+        
+
+    # Exceptions
+    except httpx.RequestError as exc:
+        print(f"An error occurred while requesting {exc.request.url!r}.")
+        return {"error": "Request failed"}
+    except httpx.HTTPStatusError as exc:
+        print(f"HTTP error {exc.response.status_code}: {exc.response.text}")
+        return {"error": "Bad response from server"}
